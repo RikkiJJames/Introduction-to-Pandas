@@ -19,7 +19,8 @@ A guide of Pandas - The Python library for data manipulation and analysis
   * [Subsetting Columns](#subsetting-columns)
     * [By Key](#by-key)
     * [By Variables](#by-variables)
-    * [Subsetting Multiple Columns](#subsetting-multiple-columns)
+    * [Subsetting Multiple Columns (By Name)](#subsetting-multiple-columns-by-name)
+    * * [Subsetting Multiple Columns (By Index)](#subsetting-multiple-columns-by-index)
     * [Using Relational Operators](#using-relational-operators)
       * [Using isin](#using-isin)
     * [Relational Operators By Variables](#relational-operators-by-variables)
@@ -32,6 +33,7 @@ A guide of Pandas - The Python library for data manipulation and analysis
   * [Manual Column Creation](#manual-column-creation)
   * [Blanket Column Creation](#blanket-column-creation)
   * [Using Existing Data](#using-existing-data)
+  * [Column Operations (apply)](#column-operations-apply)
 
 ## Section 1 - About Pandas
 
@@ -219,7 +221,7 @@ print(df)
 
 ![Subset-Columns-Variable](images/subset_columns_variable.png)
 
-#### Subsetting Multiple Columns
+#### Subsetting Multiple Columns (By Name)
 
 Multiple columns can be subset as shown:
 
@@ -232,6 +234,20 @@ print(df.head())
 ```
 
 ![Subset-Multiple](images/subset_columns_multiple.png)
+
+#### Subsetting Multiple Columns (By Index)
+
+Columns can also be selected using the index location method and list slicing:
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/population_age_structure_uk.csv")
+df = df.iloc[:,0:3]
+print(df.head())
+```
+
+![Subset-Multiple](images/subset_columns_multiple_index.png)
  
  #### Using Relational Operators
   
@@ -385,3 +401,32 @@ print(df.head())
 ```
 
 ![Existing-Data-Column-Creation](images/existing_data_column_creation.png)
+
+### Column Operations (apply)
+
+The apply function can be used to modify all entries in a DataFrame or Series. It applies any function to the values. For instance it can take a column entries as shown below:
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/population_age_structure_uk.csv")
+df["New Column] = "Yes
+print(df.head())
+```
+
+![Column-Operations-Apply-Upper](images/column_operations_apply_upper.png)
+
+and use the str.lower function to make them lowercase.
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/population_age_structure_uk.csv")
+df["New Column] = "df[New Column"].apply(str.lower
+print(df.head())
+```
+
+![Column-Operations-Apply-Lower](images/column_operations_apply_lower.png)
+
+
+### Lambda Fucntions
