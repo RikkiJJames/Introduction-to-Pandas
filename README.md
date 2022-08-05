@@ -34,7 +34,18 @@ A guide of Pandas - The Python library for data manipulation and analysis
   * [Blanket Column Creation](#blanket-column-creation)
   * [Using Existing Data](#using-existing-data)
   * [Column Operations (apply)](#column-operations-apply)
-
+  * [Lambda Functions](#lambda-functions)
+    * [Lambda Functions On Rows](#lambda-functions-on-rows)
+  * [Renaming Columns](#renaming-columns)
+    * [Using The rename Function](#using-the-rename-function)
+* [Section 7 - Aggregates](#section-7---aggregates)
+  * [Group By](#group-by)
+    * [Group By (Using Lambdas)](#group-by-using-lambdas)
+    * [Group By (Multiple Columns)](#group-by-multiple-columns)
+  * [Pivot Tables](#pivot-tables)
+* [Section 8 - Multiple DataFrames](#section-8---multiple-dataframes)
+ 
+  
 ## Section 1 - About Pandas
 
 
@@ -429,4 +440,198 @@ print(df.head())
 ![Column-Operations-Apply-Lower](images/column_operations_apply_lower.png)
 
 
-### Lambda Fucntions
+### Lambda Functions
+
+Lambda functions are small anonymous function with one expression. They can be used to apply different rules to the data within the DataFrame. In general the syntax for an "if" statement in a lambda function is: lambda x: [OUTCOME IF TRUE] if [CONDITIONAL] else [OUTCOME IF FALSE].
+
+Examples can be seen below
+
+#### Lambda Functions On Columns
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/population_age_structure_uk.csv")
+df["Predictions"] = df.["years"].apply(lambda x True if x > 2022 else False)
+print(df.head(10))
+```
+
+![Lambda-Columns](images/lambda_columns.png)
+
+#### Lambda Functions On Rows
+
+Lambda expressions can also be used to evaluate rows using the axis = 1 argument when applying the lambda
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/population_age_structure_uk.csv")
+
+#Lambda Expression On Columns
+df["check"] = df["0-4"].apply(lambda x: True if x > 3600 else False)
+
+#Row Lambda Expression
+under_twenty = lambda row: (row["0-4"] + row["5-9"] + row["10-14"] + row["15-19"]) if row["check"] == True else None
+
+#Applying Row Lambda Expression to create new column
+df["under_twenty"] = df.apply(under_twenty, axis = 1)
+
+#Printing Columns Affected 
+df2 = df.iloc[:, 0:5]
+df2["under_twenty"] = df["under_twenty"]
+```
+
+![Lambda-Rows](images/lambda_rows.png)
+
+### Renaming Columns
+
+When obtaining data from other sources, sometimes it will be good to change the column names. For example, to reference the columns using variable rules such that "df.column_name" can be used instead of df["column_name"]. All columns can be changed at once by setting the column property to another list. However, this isn't recommended as its easy to mislabel.
+
+See below:
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/population_age_structure_uk.csv")
+
+df = df.iloc[:,:3] 
+df.columns = ["Years", "Baby", "Young Child"]
+print(df)
+```
+
+![Renaming-Columns](images/renaming_columns.png)
+
+#### Using The rename Function
+
+The better way to rename is to use the rename function which uses a dictionary with the original column name as the key, and the new one as the value. That way if the current name isn't exact. Nothing will be changed.
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/population_age_structure_uk.csv")
+
+df = df.iloc[:,:3] 
+df.rename(columns = {"years": "Year", inplace = True)
+print(df)
+```
+
+![Renaming-Columns-With-Function](images/renaming_columns_with_function.png)
+
+
+## Section 7 - Aggregates
+
+Aggregate functions summarize many data points (i.e., a column of a dataframe) into a smaller set of values. They follow the syntax "df.column_name.command()". See the table below for examples.
+
+| Function | Description |
+| :-: | :-: | 
+| .mean() | Average of all values in column |
+| .std() | Standard Deviation | 
+| .median() | Median | 
+| .max() | Maximum value in column| 
+| .min() | Minimum value in column| 
+| .count() | Number of values in column| 
+| .nunique() | Number of unique values in column| 
+| .unique() | List of unique values in column| 
+
+See below for usage.
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/population_age_structure_uk.csv")
+
+print(df["0-4"].max())
+```
+
+![Aggregates-Max](images/aggregates_max.png)
+
+### Group By
+
+The groupby operation involves some combination of splitting the object, applying a function, and combining the results. This can be used to group large amounts of data and compute operations on these groups.
+
+This next section will interrogate the data shown below 
+
+![Data-Grades](images/data_grades.png)
+
+To calculate the mean score of each student the following code can be used:
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/grades.csv")
+
+averages = df.groupby("student").score.mean()
+print(averages)
+print(type(averages))
+```
+
+![Average-Grade-Score](images/average_student_score.png)
+
+The result of the code above is a Series. To keep it as a DataFrame - use the reset_index() function. The name of each column could also be used to keep each column up to data.
+
+```python
+import pandas as pd
+
+df = pd.read_csv("datafeed/grades.csv")
+
+averages = df.groupby("student").score.mean().reset_index()
+averages.rename(columns = {"score": "average_score"}, inplace = True)
+print(averages)
+print(type(averages))
+```
+
+![Average-Grade-Score-DataFrame](images/average_student_score_df.png)
+
+
+#### Group By (Using Lambdas)
+
+Grouping can also be done with customisable lambda expressions
+
+```python
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv("datafeed/grades.csv")
+
+#Calculates 75 percentile
+high_grade = df.groupby("student").score.apply(lambda x: np.percentile(x,75)).reset_index()
+print(high_grade)
+```
+
+![Aggregates-Lambda](images/aggregates_lambda.png)
+
+#### Group By (Multiple Columns)
+
+Multiple columns can be grouped using a list as an argument in the groupby function.
+
+```python
+import pandas as pd
+
+
+df = pd.read_csv("datafeed/grades.csv")
+
+subjects = df.groupby(["assignment","student"]).score.mean().reset_index()
+print(subjects)
+```
+
+![Aggregates-Multiple-Columns](images/aggregates_multiple_columns.png)
+
+### Pivot Tables
+
+In Pandas, tables output can be modified to change the layout using pivot tables.
+
+```python
+import pandas as pd
+
+
+df = pd.read_csv("datafeed/grades.csv")
+
+subjects = df.groupby(["assignment","student"]).score.mean().reset_index()
+subjects_pivot = subjects.pivot(columns = "assignment", index = "student", values = "score").reset_index()
+print(subjects_pivot)
+```
+
+![Aggregates-Pivot](images/aggregates_pivot.png)
+
+
+## Section 8 - Multiple DataFrames
